@@ -151,6 +151,7 @@
     <ResourceCompile Include="ClientTwo.rc" />
   </ItemGroup>
   <ItemGroup>
+    <Image Include="client.ico" />
     <Image Include="ClientTwo.ico" />
     <Image Include="small.ico" />
   </ItemGroup>

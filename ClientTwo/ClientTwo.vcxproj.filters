@@ -45,5 +45,8 @@
     <Image Include="ClientTwo.ico">
       <Filter>Файлы ресурсов</Filter>
     </Image>
+    <Image Include="client.ico">
+      <Filter>Файлы ресурсов</Filter>
+    </Image>
   </ItemGroup>
 </Project>

@@ -45,5 +45,26 @@
     <Image Include="Server.ico">
       <Filter>Файлы ресурсов</Filter>
     </Image>
+    <Image Include="icon1.ico">
+      <Filter>Файлы ресурсов</Filter>
+    </Image>
+    <Image Include="icon2.ico">
+      <Filter>Файлы ресурсов</Filter>
+    </Image>
+    <Image Include="..\..\device_internal_18510 (1).png">
+      <Filter>Файлы ресурсов</Filter>
+    </Image>
+    <Image Include="..\..\device_internal_18510 (2).png">
+      <Filter>Файлы ресурсов</Filter>
+    </Image>
+    <Image Include="..\..\serv2.ico">
+      <Filter>Файлы ресурсов</Filter>
+    </Image>
+    <Image Include="..\..\icon1.ico">
+      <Filter>Файлы ресурсов</Filter>
+    </Image>
+    <Image Include="..\..\serv.ico">
+      <Filter>Файлы ресурсов</Filter>
+    </Image>
   </ItemGroup>
 </Project>

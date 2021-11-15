@@ -1,180 +1,265 @@
-﻿// ClientOne.cpp : Определяет точку входа для приложения.
-//
+﻿#pragma once
+#define _CRT_SECURE_NO_WARNINGS
 
-#include "framework.h"
-#include "ClientOne.h"
-
+#define SERV_PORT 5000	// Порт сервера
+#define WSA_NETEVENT (WM_USER+1)
 #define MAX_LOADSTRING 100
 
-// Глобальные переменные:
-HINSTANCE hInst;                                // текущий экземпляр
-WCHAR szTitle[MAX_LOADSTRING];                  // Текст строки заголовка
-WCHAR szWindowClass[MAX_LOADSTRING];            // имя класса главного окна
+#pragma comment(lib, "WS2_32.lib")
+#include "framework.h"
+#include "ClientOne.h"
+#include <winsock.h>
+#include <stdio.h>
+#include <string>
 
-// Отправить объявления функций, включенных в этот модуль кода:
-ATOM                MyRegisterClass(HINSTANCE hInstance);
-BOOL                InitInstance(HINSTANCE, int);
-LRESULT CALLBACK    WndProc(HWND, UINT, WPARAM, LPARAM);
-INT_PTR CALLBACK    About(HWND, UINT, WPARAM, LPARAM);
 
-int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
-                     _In_opt_ HINSTANCE hPrevInstance,
-                     _In_ LPWSTR    lpCmdLine,
-                     _In_ int       nCmdShow)
+static PHOSTENT phe;
+char szBuf[1024];
+int flag = 0;
+static HWND hwndEdit;
+char mess[2048];
+char* m_mess = mess;
+char szHostName[128] = "localhost"; //имя хоста
+int err = 0;
+
+WSADATA wsaData; //сведения о конкретной реализации интерфейса Windows Sockets
+WORD wVersionRequested = MAKEWORD(1, 1);  //Номер требуемой версии Windows Sockets
+SOCKET cln_socket = INVALID_SOCKET; // Сокет сервера
+SOCKADDR_IN dest_sin; // Адрес сервера
+
+DWORD cbWritten;
+HINSTANCE hInst;						// current instance
+TCHAR szTitle[MAX_LOADSTRING];				// The title bar text
+TCHAR szWindowClass[MAX_LOADSTRING];			// the main window class name
+// Forward declarations of functions included in this code module:
+ATOM				MyRegisterClass(HINSTANCE hInstance);
+BOOL				InitInstance(HINSTANCE, int);
+LRESULT CALLBACK	WndProc(HWND, UINT, WPARAM, LPARAM);
+INT_PTR CALLBACK	About(HWND, UINT, WPARAM, LPARAM);
+
+
+int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _In_ LPWSTR lpCmdLine, _In_ int nCmdShow) 
 {
-    UNREFERENCED_PARAMETER(hPrevInstance);
-    UNREFERENCED_PARAMETER(lpCmdLine);
+	UNREFERENCED_PARAMETER(hPrevInstance);
+	UNREFERENCED_PARAMETER(lpCmdLine);
 
-    // TODO: Разместите код здесь.
+	// TODO: Place code here.
+	MSG msg;
+	HACCEL hAccelTable;
 
-    // Инициализация глобальных строк
-    LoadStringW(hInstance, IDS_APP_TITLE, szTitle, MAX_LOADSTRING);
-    LoadStringW(hInstance, IDC_CLIENTONE, szWindowClass, MAX_LOADSTRING);
-    MyRegisterClass(hInstance);
+	// Initialize global strings
+	LoadString(hInstance, IDS_APP_TITLE, szTitle, MAX_LOADSTRING);
+	LoadString(hInstance, IDC_CLIENTONE, szWindowClass, MAX_LOADSTRING);
+	MyRegisterClass(hInstance);
 
-    // Выполнить инициализацию приложения:
-    if (!InitInstance (hInstance, nCmdShow))
-    {
-        return FALSE;
-    }
+	// Perform application initialization:
+	if (!InitInstance(hInstance, nCmdShow))
+	{
+		return FALSE;
+	}
 
-    HACCEL hAccelTable = LoadAccelerators(hInstance, MAKEINTRESOURCE(IDC_CLIENTONE));
+	hAccelTable = LoadAccelerators(hInstance, MAKEINTRESOURCE(IDC_CLIENTONE));
 
-    MSG msg;
-
-    // Цикл основного сообщения:
-    while (GetMessage(&msg, nullptr, 0, 0))
-    {
-        if (!TranslateAccelerator(msg.hwnd, hAccelTable, &msg))
-        {
-            TranslateMessage(&msg);
-            DispatchMessage(&msg);
-        }
-    }
-
-    return (int) msg.wParam;
+	// Main message loop:
+	while (GetMessage(&msg, NULL, 0, 0))
+	{
+		if (!TranslateAccelerator(msg.hwnd, hAccelTable, &msg))
+		{
+			TranslateMessage(&msg);
+			DispatchMessage(&msg);
+		}
+	}
+	return (int)msg.wParam;
 }
 
-
-
-//
-//  ФУНКЦИЯ: MyRegisterClass()
-//
-//  ЦЕЛЬ: Регистрирует класс окна.
-//
 ATOM MyRegisterClass(HINSTANCE hInstance)
 {
-    WNDCLASSEXW wcex;
-
-    wcex.cbSize = sizeof(WNDCLASSEX);
-
-    wcex.style          = CS_HREDRAW | CS_VREDRAW;
-    wcex.lpfnWndProc    = WndProc;
-    wcex.cbClsExtra     = 0;
-    wcex.cbWndExtra     = 0;
-    wcex.hInstance      = hInstance;
-    wcex.hIcon          = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_CLIENTONE));
-    wcex.hCursor        = LoadCursor(nullptr, IDC_ARROW);
-    wcex.hbrBackground  = (HBRUSH)(COLOR_WINDOW+1);
-    wcex.lpszMenuName   = MAKEINTRESOURCEW(IDC_CLIENTONE);
-    wcex.lpszClassName  = szWindowClass;
-    wcex.hIconSm        = LoadIcon(wcex.hInstance, MAKEINTRESOURCE(IDI_SMALL));
-
-    return RegisterClassExW(&wcex);
+	WNDCLASSEX wcex;
+	wcex.cbSize = sizeof(WNDCLASSEX);
+	wcex.style = CS_HREDRAW | CS_VREDRAW;
+	wcex.lpfnWndProc = WndProc;
+	wcex.cbClsExtra = 0;
+	wcex.cbWndExtra = 0;
+	wcex.hInstance = hInstance;
+	wcex.hIcon = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_CLIENT));
+	wcex.hCursor = LoadCursor(NULL, IDC_ARROW);
+	wcex.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1);
+	wcex.lpszMenuName = MAKEINTRESOURCE(IDC_CLIENTONE);
+	wcex.lpszClassName = szWindowClass;
+	wcex.hIconSm = LoadIcon(wcex.hInstance, MAKEINTRESOURCE(IDI_CLIENT));
+	return RegisterClassEx(&wcex);
 }
 
-//
-//   ФУНКЦИЯ: InitInstance(HINSTANCE, int)
-//
-//   ЦЕЛЬ: Сохраняет маркер экземпляра и создает главное окно
-//
-//   КОММЕНТАРИИ:
-//
-//        В этой функции маркер экземпляра сохраняется в глобальной переменной, а также
-//        создается и выводится главное окно программы.
-//
 BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 {
-   hInst = hInstance; // Сохранить маркер экземпляра в глобальной переменной
-
-   HWND hWnd = CreateWindowW(szWindowClass, szTitle, WS_OVERLAPPEDWINDOW,
-      CW_USEDEFAULT, 0, CW_USEDEFAULT, 0, nullptr, nullptr, hInstance, nullptr);
-
-   if (!hWnd)
-   {
-      return FALSE;
-   }
-
-   ShowWindow(hWnd, nCmdShow);
-   UpdateWindow(hWnd);
-
-   return TRUE;
+	HWND hWnd;
+	hInst = hInstance; 
+	
+	// Store instance handle in our global variable
+	hWnd = CreateWindow(szWindowClass, szTitle, WS_OVERLAPPED | WS_SYSMENU,
+		1000, 200, 420, 260, nullptr, nullptr, hInstance, nullptr);
+	if (!hWnd)  return FALSE;
+	ShowWindow(hWnd, nCmdShow);
+	UpdateWindow(hWnd);
+	return TRUE;
 }
 
-//
-//  ФУНКЦИЯ: WndProc(HWND, UINT, WPARAM, LPARAM)
-//
-//  ЦЕЛЬ: Обрабатывает сообщения в главном окне.
-//
-//  WM_COMMAND  - обработать меню приложения
-//  WM_PAINT    - Отрисовка главного окна
-//  WM_DESTROY  - отправить сообщение о выходе и вернуться
-//
-//
+BOOL SetConnection(HWND hWnd)
+{
+	// создаем сокет
+	cln_socket = socket(AF_INET, SOCK_STREAM, 0); 
+	if (cln_socket == INVALID_SOCKET)
+	{
+		MessageBoxA(hWnd, " Socket error", "Error", MB_OK | MB_ICONSTOP);
+		return FALSE;
+	}
+
+	// Определяем адрес узла
+	phe = gethostbyname(szHostName); 
+	if (phe == NULL)
+	{
+		closesocket(cln_socket);
+		MessageBoxA(hWnd, " Адрес хоста не определен", "Error", MB_OK | MB_ICONSTOP);
+		return FALSE;
+	}
+
+	dest_sin.sin_family = AF_INET;	// Задаем тип адреса
+	dest_sin.sin_port = htons(SERV_PORT);	// Устанавливаем номер порта
+
+	memcpy((char FAR*) & (dest_sin.sin_addr), phe->h_addr, phe->h_length);// Копируем адрес узла
+	
+	// Устанавливаем соединение
+	if (connect(cln_socket, (PSOCKADDR)&dest_sin, sizeof(dest_sin)) == SOCKET_ERROR)
+	{
+		closesocket(cln_socket);
+		MessageBoxA(hWnd, " Ошибка соединения", "Error", MB_OK | MB_ICONSTOP);
+		return FALSE;
+	}
+
+	// при попытке соединения главное окно получит сообщение WSA_ACCEPT
+	if (WSAAsyncSelect(cln_socket, hWnd, WSA_NETEVENT, FD_READ | FD_CLOSE))
+	{
+		MessageBoxA(hWnd, " WSAAsyncSelect error", "Error", MB_OK);
+		return FALSE;
+	}
+
+
+	// Выводим сообщение об установке соединения с узлом
+	SendMessageA(hwndEdit, WM_SETTEXT, 0, (LPARAM)" Связь установлена!");
+
+	return TRUE;
+}
+
+void SendMsg(HWND hWnd)
+{
+	RECT rect;
+	GetWindowRect(hWnd, &rect);
+	LONG width = rect.right - rect.left;
+
+
+	char mouse[100];
+	if (SM_CMOUSEBUTTONS != 0)
+		strcpy(mouse, "mouse connected");
+	else
+		strcpy(mouse, "mouse not connected");
+
+
+	sprintf(szBuf, " width menu: %lu \r\n %s \r\n", width, mouse);
+
+	if (send(cln_socket, szBuf, strlen(szBuf), 0) != SOCKET_ERROR)
+	{
+		sprintf(m_mess, "\r\n Данные отосланы серверу \r\n %s", szBuf);
+		SendMessageA(hwndEdit, WM_SETTEXT, 0, (LPARAM)m_mess);
+	}
+	else
+	{
+		sprintf(m_mess, "%s \r\n Ошибка отправки сообщения \r\n ", m_mess);
+		SendMessageA(hwndEdit, WM_SETTEXT, 0, (LPARAM)m_mess);
+	}
+}
+
 LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
-    switch (message)
-    {
-    case WM_COMMAND:
-        {
-            int wmId = LOWORD(wParam);
-            // Разобрать выбор в меню:
-            switch (wmId)
-            {
-            case IDM_ABOUT:
-                DialogBox(hInst, MAKEINTRESOURCE(IDD_ABOUTBOX), hWnd, About);
-                break;
-            case IDM_EXIT:
-                DestroyWindow(hWnd);
-                break;
-            default:
-                return DefWindowProc(hWnd, message, wParam, lParam);
-            }
-        }
-        break;
-    case WM_PAINT:
-        {
-            PAINTSTRUCT ps;
-            HDC hdc = BeginPaint(hWnd, &ps);
-            // TODO: Добавьте сюда любой код прорисовки, использующий HDC...
-            EndPaint(hWnd, &ps);
-        }
-        break;
-    case WM_DESTROY:
-        PostQuitMessage(0);
-        break;
-    default:
-        return DefWindowProc(hWnd, message, wParam, lParam);
-    }
-    return 0;
+	int wmId, wmEvent;
+	PAINTSTRUCT ps;
+	HDC hdc;
+	switch (message)
+	{
+		case WM_CREATE: {
+			hwndEdit = CreateWindow( // Создаем доч.окно для вывода данных от процессов
+				TEXT("EDIT"), NULL,
+				WS_CHILD | WS_VISIBLE | WS_VSCROLL |
+				ES_LEFT | ES_MULTILINE | ES_AUTOVSCROLL,
+				0, 0, 400, 200, hWnd, NULL, hInst, NULL);
+			//===========================================================
+
+			err = WSAStartup(wVersionRequested, &wsaData);
+			if (err) {
+				MessageBoxA(hWnd, "WSAStartup Error", "ERROR", MB_OK | MB_ICONSTOP);
+				return FALSE;
+			}
+			sprintf(m_mess, " Используется %s \r\nСтатус: %s\r\n ",
+				    wsaData.szDescription, wsaData.szSystemStatus);
+			
+			SendMessageA(hwndEdit, WM_SETTEXT, 0, (LPARAM)m_mess);
+		}
+		break;
+
+		case WM_COMMAND: {
+			wmId = LOWORD(wParam);
+			wmEvent = HIWORD(wParam);
+			
+			switch (wmId)
+			{
+				case ID_SET:
+					SetConnection(hWnd);
+					break;
+				case ID_SENDMESSAGE:
+					SendMsg(hWnd);
+					break;
+				default:
+					return DefWindowProc(hWnd, message, wParam, lParam);
+			}
+		}
+		break;
+
+		case WM_PAINT: {
+			hdc = BeginPaint(hWnd, &ps);
+
+			// TODO: Add any drawing code here...
+			EndPaint(hWnd, &ps);
+		}
+		break;
+
+		case WM_DESTROY: {
+			WSACleanup();
+			PostQuitMessage(0);
+		}
+		break;
+		
+		case WSA_NETEVENT: {
+
+			// если на сокете выполняется передача данных, принимаем и отображаем их
+			if (WSAGETSELECTEVENT(lParam) == FD_READ) {
+				int rc = recv(cln_socket, szBuf, sizeof(szBuf), 0);
+				
+				if (rc) {
+					szBuf[rc] = '\0';
+					sprintf(m_mess, "%s \r\n Данные от сервера: %s\r\n ", m_mess, szBuf);
+					SendMessageA(hwndEdit, WM_SETTEXT, 0, (LPARAM)m_mess);
+				}
+			}
+
+			// если соединение завершено, выводим сообщение об этом
+			if (WSAGETSELECTEVENT(lParam) == FD_CLOSE)
+				MessageBoxA(hWnd, "Сервер закрыт", "Server", MB_OK);
+		}
+		break;
+
+		default:
+			return DefWindowProc(hWnd, message, wParam, lParam);
+	}
+	return 0;
 }
 
-// Обработчик сообщений для окна "О программе".
-INT_PTR CALLBACK About(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
-{
-    UNREFERENCED_PARAMETER(lParam);
-    switch (message)
-    {
-    case WM_INITDIALOG:
-        return (INT_PTR)TRUE;
 
-    case WM_COMMAND:
-        if (LOWORD(wParam) == IDOK || LOWORD(wParam) == IDCANCEL)
-        {
-            EndDialog(hDlg, LOWORD(wParam));
-            return (INT_PTR)TRUE;
-        }
-        break;
-    }
-    return (INT_PTR)FALSE;
-}
