@@ -22,6 +22,7 @@ char* m_mess = mess;
 char szHostName[128] = "localhost"; //имя хоста
 int err = 0;
 
+
 WSADATA wsaData; //сведения о конкретной реализации интерфейса Windows Sockets
 WORD wVersionRequested = MAKEWORD(1, 1);  //Номер требуемой версии Windows Sockets
 SOCKET cln_socket = INVALID_SOCKET; // Сокет сервера
@@ -152,20 +153,12 @@ BOOL SetConnection(HWND hWnd)
 
 void SendMsg(HWND hWnd)
 {
-	RECT rect;
-	GetWindowRect(hWnd, &rect);
-	LONG width = rect.right - rect.left;
+	char MoseWheel[20];
+	int MouseButtons = GetSystemMetrics(SM_CMOUSEBUTTONS);
+	GetSystemMetrics(SM_MOUSEWHEELPRESENT) ? strcpy(MoseWheel, " присутнє") : strcpy(MoseWheel, " відсутнє");
 
-
-	char mouse[100];
-	if (SM_CMOUSEBUTTONS != 0)
-		strcpy(mouse, "mouse connected");
-	else
-		strcpy(mouse, "mouse not connected");
-
-
-	sprintf(szBuf, " width menu: %lu \r\n %s \r\n", width, mouse);
-
+	sprintf(szBuf, "Кількість кнопок у миші: %d \r\nКолесо прокручування: %s", MouseButtons, MoseWheel);
+	
 	if (send(cln_socket, szBuf, strlen(szBuf), 0) != SOCKET_ERROR)
 	{
 		sprintf(m_mess, "\r\n Данные отосланы серверу \r\n %s", szBuf);

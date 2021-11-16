@@ -151,6 +151,7 @@
     <ResourceCompile Include="Server.rc" />
   </ItemGroup>
   <ItemGroup>
+    <Image Include="..\..\data-server.ico" />
     <Image Include="..\..\device_internal_18510 (1).png" />
     <Image Include="..\..\device_internal_18510 (2).png" />
     <Image Include="..\..\icon1.ico" />
@@ -158,6 +159,7 @@
     <Image Include="..\..\serv2.ico" />
     <Image Include="icon1.ico" />
     <Image Include="icon2.ico" />
+    <Image Include="serv.ico" />
     <Image Include="Server.ico" />
     <Image Include="small.ico" />
   </ItemGroup>

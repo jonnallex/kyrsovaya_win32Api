@@ -14,7 +14,8 @@
 #define IDB_PNG2                        133
 #define IDI_ICON3                       134
 #define IDI_S                           137
-#define IDI_SERVER                      137
+#define IDI_ICON1                       138
+#define IDI_SERV                        138
 #define ID_START                        32771
 #define ID_STOP                         32772
 #define ID_ICON                         32772
@@ -29,7 +30,7 @@
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NO_MFC                     1
-#define _APS_NEXT_RESOURCE_VALUE        138
+#define _APS_NEXT_RESOURCE_VALUE        139
 #define _APS_NEXT_COMMAND_VALUE         32777
 #define _APS_NEXT_CONTROL_VALUE         1000
 #define _APS_NEXT_SYMED_VALUE           110
