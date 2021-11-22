@@ -6,6 +6,8 @@
 #define WSA_NETEVENT (WM_USER+1)
 #define MAX_LOADSTRING 100
 
+#define SD_RECEIVE 0
+
 #pragma comment(lib, "WS2_32.lib")
 #include "Server.h"
 #include <windows.h>
@@ -22,7 +24,7 @@ static HWND hwndEdit;
 char mess[2048];
 char* m_mess = mess;
 int err = 0;
-int ClientNum = -1;	
+int ClientNum = -1;
 
 WSADATA wsaData; //сведения о конкр. реализации интерфейса Windows Sockets
 WORD wVersionRequested = MAKEWORD(1, 1);  //Номер требуемой версии Windows Sockets
@@ -46,23 +48,23 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
 {
 	UNREFERENCED_PARAMETER(hPrevInstance);
 	UNREFERENCED_PARAMETER(lpCmdLine);
-	
+
 	// TODO: Place code here.
 	MSG msg;
 	HACCEL hAccelTable;
-	
+
 	// Initialize global strings
 	LoadString(hInstance, IDS_APP_TITLE, szTitle, MAX_LOADSTRING);
 	LoadString(hInstance, IDC_SERVER, szWindowClass, MAX_LOADSTRING);
 	MyRegisterClass(hInstance);
-	
+
 	// Perform application initialization:
 	if (!InitInstance(hInstance, nCmdShow))
 	{
 		return FALSE;
 	}
 	hAccelTable = LoadAccelerators(hInstance, MAKEINTRESOURCE(IDC_SERVER));
-	
+
 	// Main message loop:
 	while (GetMessage(&msg, NULL, 0, 0))
 	{
@@ -96,8 +98,8 @@ ATOM MyRegisterClass(HINSTANCE hInstance)
 BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 {
 	HWND hWnd;
-	hInst = hInstance; 
-	
+	hInst = hInstance;
+
 	// Store instance handle in our global variable
 	hWnd = CreateWindow(szWindowClass, szTitle, WS_OVERLAPPED | WS_SYSMENU,
 		590, 320, 420, 260, nullptr, nullptr, hInstance, nullptr);
@@ -178,36 +180,26 @@ void ServerStart(HWND hWnd)
 }
 
 void ServerStop(HWND hWnd)
-{ 
+{
 
 	WSAAsyncSelect(srv_socket, hWnd, 0, 0);
 
-	if (srv_socket != INVALID_SOCKET) // если сокет был создан, закрываем его
-	{
 		srv_socket = INVALID_SOCKET;
 		closesocket(srv_socket);
 		WSACleanup();
-		return;
-	}
-
-	// выводим сообщение об останове сервера
+	
 	SendMessageA(hwndEdit, WM_SETTEXT, 0, (LPARAM)" Сервер остановлен");
-}
 
-void DisconnectClient(int j)
-{
-	WSAAsyncSelect(sock[j], hWindow, 0, 0);
-	closesocket(sock[j]);
 }
 
 void SendToClient(int j)
 {
 	if (j > ClientNum) return;
-	
+
 	cbWritten = SendMessageA(hwndEdit, WM_GETTEXTLENGTH, 0, 0);
 	SendMessageA(hwndEdit, WM_GETTEXT, (WPARAM)cbWritten, (LPARAM)szBuf);
 	szBuf[cbWritten] = '\0';
-	
+
 	if (send(sock[j], szBuf, strlen(szBuf), 0) != SOCKET_ERROR)
 	{
 		sprintf_s(szBuf, " Данные отосланы клиенту %d\r\n %s", j + 1, szBuf);
@@ -218,20 +210,23 @@ void SendToClient(int j)
 }
 
 void ClientOff(HWND hWnd, int j)
-{
+{ 
 	if (j > ClientNum) return;
 
 	sprintf_s(szBuf, " Отключить Клиента %i?", j + 1);
 
-	if (IDYES == MessageBoxA(hWnd, szBuf, "Question", MB_YESNO | MB_ICONQUESTION))
-		DisconnectClient(j);
+	if (IDYES == MessageBoxA(hWnd, szBuf, "Question", MB_YESNO | MB_ICONQUESTION)) {
+		WSAAsyncSelect(sock[j], hWindow, 0, 0);
+		closesocket(sock[j]);
+		return;
+	}
 }
 
 
 
 
 void WndProc_OnWSAAccept(HWND hWnd, LPARAM lParam)
-{	
+{
 	// при ошибке отменяем поступление сообщений в главное окно приложения
 	if (WSAGETSELECTERROR(lParam)) {
 		MessageBoxA(hWnd, "accept error", "Error", MB_OK);
@@ -253,8 +248,8 @@ void WndProc_OnWSAAccept(HWND hWnd, LPARAM lParam)
 
 	// добавляем клиента
 	sprintf_s(szBuf, " Добавлен клиент %i\r\nАдрес: IP=%s  Port=%u\r\n \0", ClientNum + 1,
-			  inet_ntoa(sockaddr[ClientNum].sin_addr), htons(sockaddr[ClientNum].sin_port));
-	
+		inet_ntoa(sockaddr[ClientNum].sin_addr), htons(sockaddr[ClientNum].sin_port));
+
 	SendMessageA(hwndEdit, WM_SETTEXT, 0, (LPARAM)szBuf);
 }
 
@@ -297,86 +292,87 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 	HDC hdc;
 	switch (message)
 	{
-		case WM_CREATE: {
-			hwndEdit = CreateWindow( // Создаем доч.окно для вывода данных от процессов
-				TEXT("EDIT"), NULL,
-				WS_CHILD | WS_VISIBLE | WS_VSCROLL |
-				ES_LEFT | ES_MULTILINE | ES_AUTOVSCROLL,
-				0, 0, 400, 200, hWnd, NULL, hInst, NULL);
-			//===========================================================
+	case WM_CREATE: {
+		hwndEdit = CreateWindow( // Создаем доч.окно для вывода данных от процессов
+			TEXT("EDIT"), NULL,
+			WS_CHILD | WS_VISIBLE | WS_VSCROLL |
+			ES_LEFT | ES_MULTILINE | ES_AUTOVSCROLL,
+			0, 0, 400, 200, hWnd, NULL, hInst, NULL);
+		//===========================================================
 
-			err = WSAStartup(wVersionRequested, &wsaData);
-			if (err) {
-				MessageBoxA(hWnd, " WSAStartup Error", "ERROR", MB_OK | MB_ICONSTOP);
-				return FALSE;
-			}
-
-			sprintf(m_mess, " Используется %s \r\n Статус: %s\r\n",
-				    wsaData.szDescription, wsaData.szSystemStatus);
-
-			SendMessageA(hwndEdit, WM_SETTEXT, 0, (LPARAM)m_mess);
+		err = WSAStartup(wVersionRequested, &wsaData);
+		if (err) {
+			MessageBoxA(hWnd, " WSAStartup Error", "ERROR", MB_OK | MB_ICONSTOP);
+			return FALSE;
 		}
-		break;
 
-		case WM_COMMAND: {
-			wmId = LOWORD(wParam);
-			wmEvent = HIWORD(wParam);
+		sprintf(m_mess, " Используется %s \r\n Статус: %s\r\n",
+			wsaData.szDescription, wsaData.szSystemStatus);
 
-			switch (wmId)
-			{
-				case ID_START:
-					ServerStart(hWnd);
-					break;
-				case ID_STOP:
-					ServerStop(hWnd);
-					break;
-				case ID_SEND_CLIENTONE:
-					SendToClient(0);
-					break;
-				case ID_SEND_CLIENTTWO:
-					SendToClient(1);
-					break;
-				case ID_OFF_CLIENTONE:
-					ClientOff(hWnd, 0);
-					break;
-				case ID_OFF_CLIENTTWO:
-					ClientOff(hWnd, 1);
-					break;
-				default:
-					return DefWindowProc(hWnd, message, wParam, lParam);
-			}
-		}
-		break;
+		SendMessageA(hwndEdit, WM_SETTEXT, 0, (LPARAM)m_mess);
+	}
+	 break;
 
-		case WM_PAINT: {
-			hdc = BeginPaint(hWnd, &ps);
+	case WM_COMMAND: {
+		wmId = LOWORD(wParam);
+		wmEvent = HIWORD(wParam);
 
-			// TODO: Add any drawing code here...
-			EndPaint(hWnd, &ps);
-		}
-		break;
-	
-		case WM_DESTROY: {
-			WSACleanup();
-			PostQuitMessage(0);
-		}
-		break;
+		switch (wmId)
+		{
+		case ID_START:
+			ServerStart(hWnd);
 
-		case WSA_ACCEPT: {
-			WndProc_OnWSAAccept(hWnd, lParam);
-		}
-		break;
-
-		case WSA_NETEVENT: {
-			WndProc_OnWSANetEvent(hWnd, wParam, lParam);
-		}
-		break;
-	
+			break;
+		case ID_STOP:
+			ServerStop(hWnd);
+			WSAStartup(wVersionRequested, &wsaData);
+			ClientNum = -1;
+			break;
+		case ID_SEND_CLIENTONE:
+			SendToClient(0);
+			break;
+		case ID_SEND_CLIENTTWO:
+			SendToClient(1);
+			break;
+		case ID_OFF_CLIENTONE:
+			ClientOff(hWnd, 0);
+			break;
+		case ID_OFF_CLIENTTWO:
+			ClientOff(hWnd, 1);
+			break;
 		default:
 			return DefWindowProc(hWnd, message, wParam, lParam);
+		}
+	}
+	 break;
+
+	case WM_PAINT: {
+		hdc = BeginPaint(hWnd, &ps);
+
+		// TODO: Add any drawing code here...
+		EndPaint(hWnd, &ps);
+	}
+	break;
+
+	case WM_DESTROY: {
+		WSACleanup();
+		PostQuitMessage(0);
+	}
+	 break;
+
+	case WSA_ACCEPT: {
+		WndProc_OnWSAAccept(hWnd, lParam);
+	}
+	break;
+
+	case WSA_NETEVENT: {
+		WndProc_OnWSANetEvent(hWnd, wParam, lParam);
+	}
+	break;
+
+	default:
+		return DefWindowProc(hWnd, message, wParam, lParam);
 
 	}
 	return 0;
 }
-
-

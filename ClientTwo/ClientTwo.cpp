@@ -152,19 +152,15 @@ BOOL SetConnection(HWND hWnd)
 
 void SendMsg(HWND hWnd)
 {
-	RECT rect;
-	GetWindowRect(hWnd, &rect);
-	LONG width = rect.right - rect.left;
-
-
-	char mouse[100];
-	if (SM_CMOUSEBUTTONS != 0)
-		strcpy(mouse, "mouse connected");
-	else
-		strcpy(mouse, "mouse not connected");
-
-
-	sprintf(szBuf, " width menu: %lu \r\n %s \r\n", width, mouse);
+	MEMORYSTATUSEX status;
+	status.dwLength = sizeof(status);
+	GlobalMemoryStatusEx(&status);
+	char buffer[2][_MAX_U64TOSTR_BASE10_COUNT];
+	sprintf(buffer[0], "%llu", status.ullTotalPageFile);
+	sprintf(buffer[1], "%llu", status.ullAvailPageFile);
+	
+	sprintf(szBuf, " Объем файла подкачки: %s байт. \r\n Свободный объем ФП: %s байт.\r\n",
+		buffer[0], buffer[1]);
 
 	if (send(cln_socket, szBuf, strlen(szBuf), 0) != SOCKET_ERROR)
 	{
