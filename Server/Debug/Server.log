@@ -1,3 +1,3 @@
 ﻿  Server.cpp
-D:\jonnallex\Study\III курс\V семестр\Системне програмне забезпечення\Kyrsovaya\kyrsovaya_win32Api\Server\Server.cpp(258,20): warning C4101: szMess: неиспользованная локальная переменная
+D:\jonnallex\Study\III курс\V семестр\Системне програмне забезпечення\Kyrsovaya\kyrsovaya_win32Api\Server\Server.cpp(265,20): warning C4101: szMess: неиспользованная локальная переменная
   Server.vcxproj -> D:\jonnallex\Study\III курс\V семестр\Системне програмне забезпечення\Kyrsovaya\kyrsovaya_win32Api\Debug\Server.exe

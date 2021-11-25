@@ -98,7 +98,7 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 	
 	// Store instance handle in our global variable
 	hWnd = CreateWindow(szWindowClass, szTitle, WS_OVERLAPPED | WS_SYSMENU,
-		1000, 200, 420, 260, nullptr, nullptr, hInstance, nullptr);
+		1000, 200, 350, 290, nullptr, nullptr, hInstance, nullptr);
 	if (!hWnd)  return FALSE;
 	ShowWindow(hWnd, nCmdShow);
 	UpdateWindow(hWnd);
@@ -111,7 +111,7 @@ BOOL SetConnection(HWND hWnd)
 	cln_socket = socket(AF_INET, SOCK_STREAM, 0); 
 	if (cln_socket == INVALID_SOCKET)
 	{
-		MessageBoxA(hWnd, " Socket error", "Error", MB_OK | MB_ICONSTOP);
+		MessageBoxA(hWnd, "Socket error", "Error", MB_OK | MB_ICONSTOP);
 		return FALSE;
 	}
 
@@ -120,7 +120,7 @@ BOOL SetConnection(HWND hWnd)
 	if (phe == NULL)
 	{
 		closesocket(cln_socket);
-		MessageBoxA(hWnd, " Адрес хоста не определен", "Error", MB_OK | MB_ICONSTOP);
+		MessageBoxA(hWnd, "Host address not defined", "Error", MB_OK | MB_ICONSTOP);
 		return FALSE;
 	}
 
@@ -133,20 +133,20 @@ BOOL SetConnection(HWND hWnd)
 	if (connect(cln_socket, (PSOCKADDR)&dest_sin, sizeof(dest_sin)) == SOCKET_ERROR)
 	{
 		closesocket(cln_socket);
-		MessageBoxA(hWnd, " Ошибка соединения", "Error", MB_OK | MB_ICONSTOP);
+		MessageBoxA(hWnd, "Connection error", "Error", MB_OK | MB_ICONSTOP);
 		return FALSE;
 	}
 
 	// при попытке соединения главное окно получит сообщение WSA_ACCEPT
 	if (WSAAsyncSelect(cln_socket, hWnd, WSA_NETEVENT, FD_READ | FD_CLOSE))
 	{
-		MessageBoxA(hWnd, " WSAAsyncSelect error", "Error", MB_OK);
+		MessageBoxA(hWnd, "WSAAsyncSelect error", "Error", MB_OK);
 		return FALSE;
 	}
 
 
 	// Выводим сообщение об установке соединения с узлом
-	SendMessageA(hwndEdit, WM_SETTEXT, 0, (LPARAM)" Связь установлена!");
+	SendMessageA(hwndEdit, WM_SETTEXT, 0, (LPARAM)"  Connection is set\r\n  ");
 
 	return TRUE;
 }
@@ -155,18 +155,18 @@ void SendMsg(HWND hWnd)
 {
 	char MoseWheel[20];
 	int MouseButtons = GetSystemMetrics(SM_CMOUSEBUTTONS);
-	GetSystemMetrics(SM_MOUSEWHEELPRESENT) ? strcpy(MoseWheel, " присутнє") : strcpy(MoseWheel, " відсутнє");
+	GetSystemMetrics(SM_MOUSEWHEELPRESENT) ? strcpy(MoseWheel, " is present") : strcpy(MoseWheel, " is missing");
 
-	sprintf(szBuf, "Кількість кнопок у миші: %d \r\nКолесо прокручування: %s", MouseButtons, MoseWheel);
+	sprintf(szBuf, "    The number of buttons in the mouse: %d \r\n    Scroll wheel: %s\r\n  ", MouseButtons, MoseWheel);
 	
 	if (send(cln_socket, szBuf, strlen(szBuf), 0) != SOCKET_ERROR)
 	{
-		sprintf(m_mess, "\r\n Данные отосланы серверу \r\n %s", szBuf);
+		sprintf(m_mess, "\r\n  Data has been sent to the server: \r\n%s", szBuf);
 		SendMessageA(hwndEdit, WM_SETTEXT, 0, (LPARAM)m_mess);
 	}
 	else
 	{
-		sprintf(m_mess, "%s \r\n Ошибка отправки сообщения \r\n ", m_mess);
+		sprintf(m_mess, "%s \r\n  Error sending message \r\n  ", m_mess);
 		SendMessageA(hwndEdit, WM_SETTEXT, 0, (LPARAM)m_mess);
 	}
 }
@@ -183,7 +183,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 				TEXT("EDIT"), NULL,
 				WS_CHILD | WS_VISIBLE | WS_VSCROLL |
 				ES_LEFT | ES_MULTILINE | ES_AUTOVSCROLL,
-				0, 0, 400, 200, hWnd, NULL, hInst, NULL);
+				0, 0, 330, 230, hWnd, NULL, hInst, NULL);
 			//===========================================================
 
 			err = WSAStartup(wVersionRequested, &wsaData);
@@ -191,9 +191,10 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 				MessageBoxA(hWnd, "WSAStartup Error", "ERROR", MB_OK | MB_ICONSTOP);
 				return FALSE;
 			}
-			sprintf(m_mess, " Используется %s \r\nСтатус: %s\r\n ",
-				    wsaData.szDescription, wsaData.szSystemStatus);
-			
+
+			sprintf(m_mess, "  Used by %s \r\n  Status: %s\r\n",
+				wsaData.szDescription, wsaData.szSystemStatus);
+
 			SendMessageA(hwndEdit, WM_SETTEXT, 0, (LPARAM)m_mess);
 		}
 		break;
@@ -218,7 +219,6 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 
 		case WM_PAINT: {
 			hdc = BeginPaint(hWnd, &ps);
-
 			// TODO: Add any drawing code here...
 			EndPaint(hWnd, &ps);
 		}
@@ -238,14 +238,14 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 				
 				if (rc) {
 					szBuf[rc] = '\0';
-					sprintf(m_mess, "%s \r\n Данные от сервера: %s\r\n ", m_mess, szBuf);
+					sprintf(m_mess, "%s\r\n__________Server data___________________\r\n%s\r\n", m_mess, szBuf);
 					SendMessageA(hwndEdit, WM_SETTEXT, 0, (LPARAM)m_mess);
 				}
 			}
 
 			// если соединение завершено, выводим сообщение об этом
 			if (WSAGETSELECTEVENT(lParam) == FD_CLOSE)
-				MessageBoxA(hWnd, "Сервер закрыт", "Server", MB_OK);
+				MessageBoxA(hWnd, "Server closed", "Server", MB_OK);
 		}
 		break;
 
