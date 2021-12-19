@@ -12,7 +12,6 @@
 #include <stdio.h>
 #include <string>
 
-
 static PHOSTENT phe;
 char szBuf[1024];
 int flag = 0;
@@ -21,7 +20,6 @@ char mess[2048];
 char* m_mess = mess;
 char szHostName[128] = "localhost"; //имя хоста
 int err = 0;
-
 
 WSADATA wsaData; //сведения о конкретной реализации интерфейса Windows Sockets
 WORD wVersionRequested = MAKEWORD(1, 1);  //Номер требуемой версии Windows Sockets
@@ -38,7 +36,6 @@ BOOL				InitInstance(HINSTANCE, int);
 LRESULT CALLBACK	WndProc(HWND, UINT, WPARAM, LPARAM);
 INT_PTR CALLBACK	About(HWND, UINT, WPARAM, LPARAM);
 
-
 int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _In_ LPWSTR lpCmdLine, _In_ int nCmdShow) 
 {
 	UNREFERENCED_PARAMETER(hPrevInstance);
@@ -54,18 +51,15 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
 	MyRegisterClass(hInstance);
 
 	// Perform application initialization:
-	if (!InitInstance(hInstance, nCmdShow))
-	{
+	if (!InitInstance(hInstance, nCmdShow)){
 		return FALSE;
 	}
 
 	hAccelTable = LoadAccelerators(hInstance, MAKEINTRESOURCE(IDC_CLIENTONE));
 
 	// Main message loop:
-	while (GetMessage(&msg, NULL, 0, 0))
-	{
-		if (!TranslateAccelerator(msg.hwnd, hAccelTable, &msg))
-		{
+	while (GetMessage(&msg, NULL, 0, 0)) {
+		if (!TranslateAccelerator(msg.hwnd, hAccelTable, &msg)) {
 			TranslateMessage(&msg);
 			DispatchMessage(&msg);
 		}
@@ -107,45 +101,39 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 
 BOOL SetConnection(HWND hWnd)
 {
-	// создаем сокет
+	// створюємо сокет
 	cln_socket = socket(AF_INET, SOCK_STREAM, 0); 
-	if (cln_socket == INVALID_SOCKET)
-	{
+	if (cln_socket == INVALID_SOCKET) {
 		MessageBoxA(hWnd, "Socket error", "Error", MB_OK | MB_ICONSTOP);
 		return FALSE;
 	}
 
-	// Определяем адрес узла
+	// Визначаємо адресу вузла
 	phe = gethostbyname(szHostName); 
-	if (phe == NULL)
-	{
+	if (phe == NULL) {
 		closesocket(cln_socket);
 		MessageBoxA(hWnd, "Host address not defined", "Error", MB_OK | MB_ICONSTOP);
 		return FALSE;
 	}
 
-	dest_sin.sin_family = AF_INET;	// Задаем тип адреса
-	dest_sin.sin_port = htons(SERV_PORT);	// Устанавливаем номер порта
-
-	memcpy((char FAR*) & (dest_sin.sin_addr), phe->h_addr, phe->h_length);// Копируем адрес узла
+	dest_sin.sin_family = AF_INET;	// Задаємо тип адреси
+	dest_sin.sin_port = htons(SERV_PORT);	// Встановлюємо номер порту
+	memcpy((char FAR*) & (dest_sin.sin_addr), phe->h_addr, phe->h_length);// Копіюємо адресу вузла
 	
-	// Устанавливаем соединение
-	if (connect(cln_socket, (PSOCKADDR)&dest_sin, sizeof(dest_sin)) == SOCKET_ERROR)
-	{
+	// Встановлюємо з'єднання
+	if (connect(cln_socket, (PSOCKADDR)&dest_sin, sizeof(dest_sin)) == SOCKET_ERROR) {
 		closesocket(cln_socket);
 		MessageBoxA(hWnd, "Connection error", "Error", MB_OK | MB_ICONSTOP);
 		return FALSE;
 	}
 
-	// при попытке соединения главное окно получит сообщение WSA_ACCEPT
-	if (WSAAsyncSelect(cln_socket, hWnd, WSA_NETEVENT, FD_READ | FD_CLOSE))
-	{
+	// при спробі з'єднання головне вікно отримає повідомлення WSA_ACCEPT
+	if (WSAAsyncSelect(cln_socket, hWnd, WSA_NETEVENT, FD_READ | FD_CLOSE)){
 		MessageBoxA(hWnd, "WSAAsyncSelect error", "Error", MB_OK);
 		return FALSE;
 	}
 
-
-	// Выводим сообщение об установке соединения с узлом
+	// Виводимо повідомлення про встановлення з'єднання з вузлом
 	SendMessageA(hwndEdit, WM_SETTEXT, 0, (LPARAM)"  Connection is set\r\n  ");
 
 	return TRUE;
@@ -159,13 +147,10 @@ void SendMsg(HWND hWnd)
 
 	sprintf(szBuf, "    The number of buttons in the mouse: %d \r\n    Scroll wheel: %s\r\n  ", MouseButtons, MoseWheel);
 	
-	if (send(cln_socket, szBuf, strlen(szBuf), 0) != SOCKET_ERROR)
-	{
+	if (send(cln_socket, szBuf, strlen(szBuf), 0) != SOCKET_ERROR) {
 		sprintf(m_mess, "\r\n  Data has been sent to the server: \r\n%s", szBuf);
 		SendMessageA(hwndEdit, WM_SETTEXT, 0, (LPARAM)m_mess);
-	}
-	else
-	{
+	} else {
 		sprintf(m_mess, "%s \r\n  Error sending message \r\n  ", m_mess);
 		SendMessageA(hwndEdit, WM_SETTEXT, 0, (LPARAM)m_mess);
 	}
@@ -184,7 +169,6 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 				WS_CHILD | WS_VISIBLE | WS_VSCROLL |
 				ES_LEFT | ES_MULTILINE | ES_AUTOVSCROLL,
 				0, 0, 330, 230, hWnd, NULL, hInst, NULL);
-			//===========================================================
 
 			err = WSAStartup(wVersionRequested, &wsaData);
 			if (err) {
@@ -194,7 +178,6 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 
 			sprintf(m_mess, "  Used by %s \r\n  Status: %s\r\n",
 				wsaData.szDescription, wsaData.szSystemStatus);
-
 			SendMessageA(hwndEdit, WM_SETTEXT, 0, (LPARAM)m_mess);
 		}
 		break;
@@ -219,7 +202,6 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 
 		case WM_PAINT: {
 			hdc = BeginPaint(hWnd, &ps);
-			// TODO: Add any drawing code here...
 			EndPaint(hWnd, &ps);
 		}
 		break;
@@ -231,19 +213,16 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		break;
 		
 		case WSA_NETEVENT: {
-
-			// если на сокете выполняется передача данных, принимаем и отображаем их
+			// якщо на сокеті виконується передача даних, приймаємо та відображаємо їх
 			if (WSAGETSELECTEVENT(lParam) == FD_READ) {
 				int rc = recv(cln_socket, szBuf, sizeof(szBuf), 0);
-				
 				if (rc) {
 					szBuf[rc] = '\0';
 					sprintf(m_mess, "%s\r\n__________Server data___________________\r\n%s\r\n", m_mess, szBuf);
 					SendMessageA(hwndEdit, WM_SETTEXT, 0, (LPARAM)m_mess);
 				}
 			}
-
-			// если соединение завершено, выводим сообщение об этом
+			// якщо з'єднання завершено, виводимо повідомлення про це
 			if (WSAGETSELECTEVENT(lParam) == FD_CLOSE)
 				MessageBoxA(hWnd, "Server closed", "Server", MB_OK);
 		}
@@ -254,7 +233,3 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 	}
 	return 0;
 }
-
-
-
-
