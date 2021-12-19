@@ -175,15 +175,15 @@ BOOL AcceptClient(int j)
 void WndProc_OnWSAAccept(HWND hWnd, LPARAM lParam)
 {
 	// при помилці скасовуємо надходження повідомлень у головне вікно програми
-	if (WSAGETSELECTERROR(lParam)) {
-		MessageBoxA(hWnd, "Accept error", "Error", MB_OK);
-		WSAAsyncSelect(srv_socket, hWnd, 0, 0);
-		return;
-	}
-	if (ClientNum == 1) {
-		MessageBoxA(hWnd, "Number of clients >2\r\n", "Connection is invalid", MB_OK);
-		return;
-	}
+	//if (WSAGETSELECTERROR(lParam)) {
+	///	MessageBoxA(hWnd, "Accept error", "Error", MB_OK);
+	//	WSAAsyncSelect(srv_socket, hWnd, 0, 0);
+	//	return;
+	//}
+	///if (ClientNum == 1) {
+	//	MessageBoxA(hWnd, "Number of clients >2\r\n", "Connection is invalid", MB_OK);
+	//return;
+	//}
 
 	ClientNum++;
 
@@ -193,9 +193,9 @@ void WndProc_OnWSAAccept(HWND hWnd, LPARAM lParam)
 	}
 
 	//додаємо клієнта
-	sprintf_s(szBuf, "  Added client %i\r\n  Address: IP=%s  Port=%u\r\n \0", ClientNum + 1,
-		inet_ntoa(sockaddr[ClientNum].sin_addr), htons(sockaddr[ClientNum].sin_port));
-	SendMessageA(hwndEdit, WM_SETTEXT, 0, (LPARAM)szBuf);
+	//sprintf_s(szBuf, "  Added client %i\r\n  Address: IP=%s  Port=%u\r\n \0", ClientNum + 1,
+		//inet_ntoa(sockaddr[ClientNum].sin_addr), htons(sockaddr[ClientNum].sin_port));
+	//SendMessageA(hwndEdit, WM_SETTEXT, 0, (LPARAM)szBuf);
 }
 
 void SendToClient(int j)
