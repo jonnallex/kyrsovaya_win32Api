@@ -193,9 +193,9 @@ void WndProc_OnWSAAccept(HWND hWnd, LPARAM lParam)
 	}
 
 	//додаємо клієнта
-	//sprintf_s(szBuf, "  Added client %i\r\n  Address: IP=%s  Port=%u\r\n \0", ClientNum + 1,
-		//inet_ntoa(sockaddr[ClientNum].sin_addr), htons(sockaddr[ClientNum].sin_port));
-	//SendMessageA(hwndEdit, WM_SETTEXT, 0, (LPARAM)szBuf);
+	sprintf_s(szBuf, "  Added client %i\r\n  Address: IP=%s  Port=%u\r\n \0", ClientNum + 1,
+		inet_ntoa(sockaddr[ClientNum].sin_addr), htons(sockaddr[ClientNum].sin_port));
+	SendMessageA(hwndEdit, WM_SETTEXT, 0, (LPARAM)szBuf);
 }
 
 void SendToClient(int j)
